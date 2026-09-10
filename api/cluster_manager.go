@@ -197,6 +197,17 @@ func clusterManagerPut(state types.State, r *http.Request) types.Response {
 	}
 
 	changedConfigs := make(map[string]string)
+	if args.LXDURL != nil {
+		if *args.LXDURL != "" {
+			err = apiTypes.ValidateLXDURL(*args.LXDURL)
+			if err != nil {
+				return types.BadRequest(fmt.Errorf("Invalid lxd_url: %w", err))
+			}
+		}
+
+		changedConfigs[database.LXDURLKey] = *args.LXDURL
+	}
+
 	if args.UpdateIntervalSeconds != nil {
 		changedConfigs[database.UpdateIntervalSecondsKey] = *args.UpdateIntervalSeconds
 	}
