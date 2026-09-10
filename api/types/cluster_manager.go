@@ -1,7 +1,9 @@
 package types
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -60,6 +62,30 @@ type ClusterManagerPut struct {
 	// Enables or disables the reverse tunnel to the cluster manager
 	// Example: true, false
 	ReverseTunnel *bool `json:"reverse_tunnel" yaml:"reverse_tunnel"`
+
+	// The URL of the LXD UI
+	// Example: https://example.com/ui
+	LXDURL *string `json:"lxd_url" yaml:"lxd_url"`
+}
+
+// ValidateLXDURL checks that value is an absolute HTTP or HTTPS URL with a host.
+// A bare host or IP (e.g. "192.168.1.10:8443") without an "http://" or "https://" prefix is
+// rejected.
+func ValidateLXDURL(value string) error {
+	u, err := url.ParseRequestURI(value)
+	if err != nil {
+		return err
+	}
+
+	if u.Scheme == "" || u.Host == "" {
+		return fmt.Errorf("Invalid value %q: expected an absolute URL starting with http:// or https://, for example https://192.168.1.10:8443/ui", value)
+	}
+
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return fmt.Errorf("Invalid value %q: URL scheme must be http or https", value)
+	}
+
+	return nil
 }
 
 // StatusDistribution represents the distribution of items.
