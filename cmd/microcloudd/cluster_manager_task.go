@@ -122,6 +122,12 @@ func sendClusterManagerStatusMessage(ctx context.Context, sh *service.Handler, s
 		return nextUpdate
 	}
 
+	payload.UIURL, err = database.LoadLXDURL(s, ctx, clusterManager.ID)
+	if err != nil && !api.StatusErrorCheck(err, http.StatusNotFound) {
+		logger.Error("Failed to load cluster UI URL", logger.Ctx{"err": err})
+		return nextUpdate
+	}
+
 	err = enrichClusterMemberMetrics(lxdClient, lxdMembers, &payload)
 	if err != nil {
 		logger.Error("Failed to enrich cluster member metrics", logger.Ctx{"err": err})
@@ -240,7 +246,7 @@ func enrichServerMetrics(ctx context.Context, lxdService *service.LXDService, lx
 }
 
 func enrichClusterMemberMetrics(lxdClient lxd.InstanceServer, lxdMembers []api.ClusterMember, result *types.ClusterManagerPostStatus) error {
-	if len(lxdMembers) > 0 {
+	if result.UIURL == "" && len(lxdMembers) > 0 {
 		result.UIURL = lxdMembers[0].URL
 	}
 
